@@ -47,7 +47,6 @@ def fetch_student_information(name: str = Query(..., description="Student full n
         raise HTTPException(status_code=404, detail="Student not found in database")
     
     
-##### DATABASE FOR MONTIORING TOOL MIGHT BE INCORRECT? FIX?
 @app.get("/groups")
 def fetch_class_groups(name: str | None = Query(None, description="Group name query to see students in specified group")):
     if name == None:
