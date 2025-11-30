@@ -45,8 +45,7 @@ pipeline {
 					sleep 5
 
 					echo "--- 3. RUNNING JMETER LOAD TEST ---"
-					sh 'rm -rf dashboard'  // clean old dashboard
-					sh 'rm -f results.jtl' // remove old results file
+					sh 'rm -rf dashboard_realistic dashboard_crash realistic.jtl crash.jtl api.log *.zip' // Clean up files from last build
 					// Run Jmeter load balancing tests
 					// 		- '/opt/apache-jmeter-5.6.3/bin/jmeter -n' |  Run jmeter from location in Jenkins in Non GUI mode (necessary for Jenkins)
 					// 		- '-t jmeter/load_test.jmx' | Run the specificed test plan
@@ -54,7 +53,12 @@ pipeline {
 					// 		- '-e -o dashboard' | Generate an HTML dashboard of results when finished
 					// 		- '-Jusers=30' | Run the test simulated 30 virtual users of the API
 					// 		- 'Jsecure.ignore_xstream_security=true' | JMeter property, enabling a compatibility/security override.
-					sh '/opt/apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/load_test.jmx -l results.jtl -e -o dashboard -Jusers=30 -Jsecure.ignore_xstream_security=true'
+
+					echo "--- RUNNING REALISTIC CLASS TEST (30 Users) ---"
+                    sh '/opt/apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/load_test.jmx -l realistic.jtl -e -o dashboard_realistic -Jusers=30 -Jrampup=5 -Jduration=30 -Jsecure.ignore_xstream_security=true'
+                    
+                    echo "--- RUNNING RAMP-UP CAPACITY TEST (Goal: 5000 Users) ---"
+                    sh '/opt/apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/load_test.jmx -l crash.jtl -e -o dashboard_crash -Jusers=5000 -Jrampup=100 -Jduration=120 -Jsecure.ignore_xstream_security=true'
 
 					echo "--- 4. TESTS FINISHED, CLEANING UP ---"
 					sh "pkill -f 'uvicorn api.class_api:app'"
@@ -67,12 +71,52 @@ pipeline {
 	post {
 		success {
 			script { 
-				notifyWebex("---\n\n#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} was SUCCESSFUL\n\n View here: <${env.BUILD_URL}|open>\n\n📊 Load Test Complete! Download the Dashboard Report Here: \n\n---")
+				sh 'zip -r realistic_report.zip dashboard_realistic || true'
+                sh 'zip -r crash_report.zip dashboard_crash || true'
+
+				archiveArtifacts artifacts: '*.zip', allowEmptyArchive: true
+                archiveArtifacts artifacts: '*.jtl', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'api.log', allowEmptyArchive: true
+
+				def realisticLink = "${env.BUILD_URL}artifact/realistic_report.zip"
+				def crashLink = "${env.BUILD_URL}artifact/crash_report.zip"
+				def buildLink = "${env.BUILD_URL}"
+
+				def message = """\
+---
+
+#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} was SUCCESSFUL
+
+View here: [Build ${env.BUILD_NUMBER}](${buildLink})
+
+📊 Load Tests are Complete! Download the Reports here:
+
+1. Baseline Test (30 Users): [Download Report](${realisticLink})
+
+2. Capacity Test (5000 Users): [Download Report](${crashLink})
+
+---
+
+""".stripIndent()
+				notifyWebex(message)
+
+				
 			}
 		}
 		failure {
 			script{ 
-				notifyWebex("---\n\n#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} has FAILED\n\n View here: <${env.BUILD_URL}|open>\n\nLoad Test was not complete.\n\n---")
+				def message = """\
+---
+
+#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} has FAILED
+
+View here: <${env.BUILD_URL}|open>
+
+📊 Load Test was not complete.
+
+---
+""".stripIndent()
+				notifyWebex(message)
 			}
 		}
 	}
