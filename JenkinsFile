@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/finnxthomas/OurClass-API.git',
+                    branch: 'main',
+                    credentialsId: 'github-token'
+            }
+        }
+
+        stage('Install Requirements') {
+            steps {
+                sh 'pip3 install -r requirements.txt --break-system-packages'
+            }
+        }
+
+		stage ('Run Pytest Suite to Test Class-API Functionality')
+		{
+			steps {
+				echo "--- RUNNING PYTEST SUITE ---"
+                sh 'chmod +x test_class_api.sh'  // Make test.sh executable
+                sh './test_class_api.sh'
+            }
+
+		}
+
+        stage('Launch API + Run Jmeter Load Tests') {
+            steps {
+				script
+				{
+					echo "--- 1. STARTING FASTAPI SERVER ---"
+					// Start API in background using uvicorn
+					//		- 'nohup /var/jenkins_home/.local/bin/uvicorn class_api:app' | Starts class_api.py's app (The FASTAPI). It runs continuously in the background
+					//		- '--host 0.0.0.0 --port 8000' | Makes the API available externally on port 8000
+					// 		- '> api.log 2>&1 &' | Redirect standard output (stdout) to api.log, redirect standard error (stderr) to standard output
+					sh 'nohup /var/jenkins_home/.local/bin/uvicorn api.class_api:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &'
+					
+					echo "--- 2. WAITING FOR API TO BOOT ---"
+					sleep 5
+
+					echo "--- 3. RUNNING JMETER LOAD TEST ---"
+					sh 'rm -rf dashboard'  // clean old dashboard
+					sh 'rm -f results.jtl' // remove old results file
+					// Run Jmeter load balancing tests
+					// 		- '/opt/apache-jmeter-5.6.3/bin/jmeter -n' |  Run jmeter from location in Jenkins in Non GUI mode (necessary for Jenkins)
+					// 		- '-t jmeter/load_test.jmx' | Run the specificed test plan
+					// 		- '-l results.jtl'. | Output the results in results.jtl
+					// 		- '-e -o dashboard' | Generate an HTML dashboard of results when finished
+					// 		- '-Jusers=30' | Run the test simulated 30 virtual users of the API
+					// 		- 'Jsecure.ignore_xstream_security=true' | JMeter property, enabling a compatibility/security override.
+					sh '/opt/apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/load_test.jmx -l results.jtl -e -o dashboard -Jusers=30 -Jsecure.ignore_xstream_security=true'
+
+					echo "--- 4. TESTS FINISHED, CLEANING UP ---"
+					sh "pkill -f 'uvicorn api.class_api:app'"
+				}
+            }
+        }
+    }
+
+
+	post {
+		success {
+			script { 
+				notifyWebex("---\n\n#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} was SUCCESSFUL\n\n View here: <${env.BUILD_URL}|open>\n\n📊 Load Test Complete! Download the Dashboard Report Here: \n\n---")
+			}
+		}
+		failure {
+			script{ 
+				notifyWebex("---\n\n#### Build ${env.BUILD_NUMBER} in ${env.JOB_NAME} has FAILED\n\n View here: <${env.BUILD_URL}|open>\n\nLoad Test was not complete.\n\n---")
+			}
+		}
+	}
+}
+
+/**
+ * Sends a markdown message to a Webex room using a BOT token.
+ * Requires credentials:
+ *   - WEBEX_BOT_TOKEN (Secret text)
+ *   - WEBEX_ROOM_ID   (Secret text or String)
+ */
+def notifyWebex(String msg) {
+  withCredentials([
+    string(credentialsId: 'CLASS_API_BOT_TOKEN', variable: 'WB_TOKEN'),
+    string(credentialsId: 'CLASS_API_ROOM_ID',  variable: 'ROOM_ID')
+  ]) {
+    def body = groovy.json.JsonOutput.toJson([ roomId: ROOM_ID, markdown: msg ])
+    try {
+      httpRequest(
+        httpMode: 'POST',
+        url: 'https://webexapis.com/v1/messages',
+        customHeaders: [[name: 'Authorization', value: "Bearer ${WB_TOKEN}"]],
+        contentType: 'APPLICATION_JSON',
+        requestBody: body,
+        validResponseCodes: '200:299'
+      )
+    } catch (err) {
+      echo "Webex notify failed: ${err}"
+    }
+  }
+}
