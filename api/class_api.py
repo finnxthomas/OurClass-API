@@ -10,7 +10,7 @@ app = FastAPI()
 def fetch_professor():
     for person, data in class_database.items():
         if data.role == 'professor':
-            return {"professsor": person}
+            return {"professor": person}
 
 ## GET /students: Fetches a full list of students in GBA6270
 @app.get("/students")
