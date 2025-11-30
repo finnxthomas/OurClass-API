@@ -120,6 +120,7 @@ def test_unknown_student():
     
     assert error["detail"] == "Student not found in database"
 
+
 ##
 ## Test Error Handing for Groups
 ##
