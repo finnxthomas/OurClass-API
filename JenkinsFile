@@ -71,13 +71,17 @@ pipeline {
 	post {
 		success {
 			script { 
+
+				// Create zip files of the Jmeter Reports
 				sh 'zip -r realistic_report.zip dashboard_realistic || true'
                 sh 'zip -r crash_report.zip dashboard_crash || true'
 
+				// Add the reports to the Jenkins Artifacts
 				archiveArtifacts artifacts: '*.zip', allowEmptyArchive: true
                 archiveArtifacts artifacts: '*.jtl', allowEmptyArchive: true
                 archiveArtifacts artifacts: 'api.log', allowEmptyArchive: true
-
+				
+				// Links for Webex Message
 				def realisticLink = "${env.BUILD_URL}artifact/realistic_report.zip"
 				def crashLink = "${env.BUILD_URL}artifact/crash_report.zip"
 				def buildLink = "${env.BUILD_URL}"
