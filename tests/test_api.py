@@ -48,7 +48,7 @@ def test_fetch_student_data():
     assert student_data["FINN THOMAS"]["Network Security Monitoring Tool Group"] == 1
     assert student_data["FINN THOMAS"]["Final Project Group"] ==  1
     
-    #Test Student Data for Hugo Rosales
+    # Test Student Data for Hugo Rosales
     response = client.get("/student?name=Hugo%20Rosales")
     assert response.status_code == 200
     student_data = response.json()
