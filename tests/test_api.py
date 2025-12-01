@@ -120,6 +120,7 @@ def test_unknown_student():
     assert response.status_code == 404
     error = response.json()
     
+    # Custom error test
     assert error["detail"] == "Student not found in database"
 
 
