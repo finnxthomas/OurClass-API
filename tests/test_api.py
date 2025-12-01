@@ -132,5 +132,6 @@ def test_unknown_group():
     assert response.status_code == 404
     error = response.json()
     
+    # Custom Error Test
     assert error["detail"] == "Specified group name does not exist"
     
