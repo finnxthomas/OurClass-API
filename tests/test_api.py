@@ -35,7 +35,8 @@ def test_fetch_professor():
     assert data["professor"] == "FAHEEM AHMED SHAIKH"
     
 ##
-## Test that student data retrieved with GET /student?name={student name} is correct
+## Test that student data retrieved with GET /student?name={student name} is 
+## correct
 ##
 def test_fetch_student_data():
     # Test Student Data for Finn Thomas
