@@ -1,13 +1,31 @@
 # CI/CD with Custom API + Apache JMeter
 
-#### Group 1: Finn Thomas and Hugo Rosales
-
 ## Project Overview
 This project demonstrates a CI/CD Pipeline for the deployment, testing, and monitoring of a custom API.  
 The solution integrates **Docker, Ngrok, Jenkins, GitHub, Python (FastAPI), Apache JMeter, and Webex**.
 
 The custom API includes multiple GET commands allowing users to retrieve data on Cal Poly Pomona's Fall 2025 GBA 6270 students, professor, and groups for project assignments. This API is load tested using Apache JMeter to determine if it is capable of handling simultaneous requests from API users.
 
+Project By: Finn Thomas and Hugo Rosales
+
+## Repository Structure
+```
+.
+├── api			# Folder for API components
+│   ├── __init__.py
+│   ├── class_api.py		# Contains the FastAPI
+│   └── class_data.py		# Contains the Database queried through the API
+├── JenkinsFile		# Groovy script for Jenkins pipeline
+├── jmeter			# Folder for jmeter components
+│   └── load_test.jmx		# Contains the Test Plan for load testing
+├── README.md
+├── requirements.txt	# Project's required python packages
+├── test_class_api.sh	# Script to run the python test suite
+└── tests			# Folder for Pytest suite
+    ├── __init__.py
+    ├── golden_data.py		# 'Golden' set of student data for test verification
+    └── test_api.py			# Pytest suite for verifying API functionality
+```
 
 ### CI/CD Pipeline Workflow
 1. **GitHub Push** – New code is added into the repository including API Code, Pytests, and JMeter Test Plans.
@@ -72,25 +90,6 @@ ngrok http 8080
 
 7. Clone the repository to the local machine so that you can push changes to start the build.
 
-## Repository Structure
-```
-.
-├── api			# Folder for API components
-│   ├── __init__.py
-│   ├── class_api.py		# Contains the FastAPI
-│   └── class_data.py		# Contains the Database queried through the API
-├── JenkinsFile		# Groovy script for Jenkins pipeline
-├── jmeter			# Folder for jmeter components
-│   └── load_test.jmx		# Contains the Test Plan for load testing
-├── README.md
-├── requirements.txt	# Project's required python packages
-├── test_class_api.sh	# Script to run the python test suite
-└── tests			# Folder for Pytest suite
-    ├── __init__.py
-    ├── golden_data.py		# 'Golden' set of student data for test verification
-    └── test_api.py			# Pytest suite for verifying API functionality
-```
-
 ## Class API – Available Commands
 
 | Command | Description |
@@ -123,6 +122,6 @@ The pipeline runs two distinct tests to provide a full performance analysis:
 
 ![Realistic Report](readme_images/RealisticReport.jpg)
 
-**Realistic Test Example JMeter Report:**
+**Stress Test Example JMeter Report:**
 
-![Realistic Report](readme_images/StressReport.jpg)
+![Stress Report](readme_images/StressReport.jpg)
