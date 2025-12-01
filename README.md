@@ -1,7 +1,7 @@
 # CI/CD with Custom API + Apache JMeter
-Group 1: Finn Thomas and Hugo Rosales
 
----
+#### Group 1: Finn Thomas and Hugo Rosales
+
 ## Project Overview
 This project demonstrates a CI/CD Pipeline for the deployment, testing, and monitoring of a custom API.  
 The solution integrates **Docker, Ngrok, Jenkins, GitHub, Python (FastAPI), Apache JMeter, and Webex**.
@@ -31,12 +31,8 @@ The custom API includes multiple GET commands allowing users to retrieve data on
 - **Notification Service:** Cisco Webex  
 - **Tunneling:** Ngrok (for GitHub Webhooks)
 
-
----
-
 ## Setting Up the Environment
 To create a portable and isolated environment, Docker is utilized to host the Jenkins server. This required manual configuration to support specific tooling needs for this project. The setup steps are as follows:
-
 
 1. Launch Jenkins using the official LTS image, mapping the necessary ports and volume data:
 ```bash
@@ -76,9 +72,6 @@ ngrok http 8080
 
 7. Clone the repository to the local machine so that you can push changes to start the build.
 
-
----
-
 ## Repository Structure
 ```
 .
@@ -98,8 +91,6 @@ ngrok http 8080
     └── test_api.py			# Pytest suite for verifying API functionality
 ```
 
----
-
 ## Class API – Available Commands
 
 | Command | Description |
@@ -109,8 +100,6 @@ ngrok http 8080
 | GET /student?name=[Full Student Name] | Fetch specific student data |
 | GET /groups | Fetch all group assignment names |
 | GET /groups?name=[Group assignment name] | Fetch specified group assignment data |
-
----
 
 ## Apache JMeter Test Design & Parameterization:
 
@@ -125,11 +114,8 @@ The JMeter Test Plan uses dynamic parameters to avoid hard‑coding:
 This design allows us to use one single test file to perform both "Realistic" (30 users) and "Stress" (5,000 users) tests simply by changing the Jenkins command arguments.
 
 The pipeline runs two distinct tests to provide a full performance analysis:
-1. Realistic Test: Runs with -Jusers=30 to verify the API works for a normal class size
-2. Stress Test: Runs with -Jusers=5000 and -Jrampup=100 to aggressively load the server and find the failure point.
-
-
----
+1. **Realistic Test:** Runs with -Jusers=30 to verify the API works for a normal class size
+2. **Stress Test:** Runs with -Jusers=5000 and -Jrampup=100 to aggressively load the server and find the failure point.
 
 ## Example JMeter Results
 
@@ -140,4 +126,3 @@ The pipeline runs two distinct tests to provide a full performance analysis:
 **Realistic Test Example JMeter Report:**
 
 ![Realistic Report](readme_images/StressReport.jpg)
----
