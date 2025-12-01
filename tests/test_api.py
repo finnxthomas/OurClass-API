@@ -120,7 +120,7 @@ def test_unknown_student():
     assert response.status_code == 404
     error = response.json()
     
-    # Custom error test
+    # Assert that Custom error details were given
     assert error["detail"] == "Student not found in database"
 
 
@@ -132,6 +132,6 @@ def test_unknown_group():
     assert response.status_code == 404
     error = response.json()
     
-    # Custom Error Test
+	# Assert that Custom error details were given
     assert error["detail"] == "Specified group name does not exist"
     
