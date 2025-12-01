@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from api.class_api import app
 from tests.golden_data import golden_students
 
+# Start the Test client for FastAPI
 client = TestClient(app)
 
 ##
